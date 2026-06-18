@@ -1,0 +1,6 @@
+# ignore data
+/data/*
+.venv
+
+# keep
+!/data/README.md
