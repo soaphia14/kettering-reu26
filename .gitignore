@@ -4,3 +4,7 @@
 
 # keep
 !/data/README.md
+
+# ignore pycache
+__pycache__/
+*.py[cod]
