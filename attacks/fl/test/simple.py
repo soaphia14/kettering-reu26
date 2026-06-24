@@ -1,7 +1,6 @@
 """
 Testing data loading with this repo's setup (utils.py).
-Attempting to make a cleaner way to test the model
-
+Making a cleaner way to test the model.
 """
 
 import sys
@@ -20,7 +19,7 @@ from attacks.fl.utils import get_windowed_data, load_model_checkpoint
 # ----
 # Input
 data_filename = "RandomPos_0709.csv"
-ckpt_filename = "mainModelBackup.ckpt"
+ckpt_filename = "randpos-30-10-100.ckpt"
 train_perc = 80
 
 # ----
@@ -37,10 +36,3 @@ data_file = f"data/{data_filename}"
 # Test the model
 out = model.test(x_test, y_test, mathy=True)
 print(f"Out: {out}")
-
-# ----
-# Generate attack
-# Step 6: Generate adversarial test examples
-attack = FastGradientMethod(model, eps=0.1)
-
-x_test_adv = attack.generate(x=x_test)
