@@ -7,11 +7,12 @@ import numpy as np
 from art.estimators.classification import PyTorchClassifier
 
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import f1_score
 
 import time
 
 # Create dataset based on the provided CSV file and divide it according to the specified ratio
-def create_dataset(data_file, divide_by):
+def create_dataset(data_file, divide_by, train_percen : float = 0.8):
     data_set = np.genfromtxt(
         data_file,
         delimiter=","
@@ -34,7 +35,6 @@ def create_dataset(data_file, divide_by):
 
     length = int(x.shape[0]/divide_by)
     print(f"dataset length: {length}")
-    train_percen = 0.8
     train_end = int(length*train_percen)
 
     x_train = x[:train_end]
@@ -103,8 +103,12 @@ def run_simple_full_attack(data_file, divide_by, model_filename, Attack, **attac
     # Step 5: Evaluate the ART classifier on benign test examples
 
     benign_predictions = classifier.predict(x_test)
-    benign_accuracy = np.sum(np.argmax(benign_predictions, axis=1) == np.argmax(y_test, axis=1)) / len(y_test)
+    benign_pred_classes = np.argmax(benign_predictions, axis=1)
+    true_classes = np.argmax(y_test, axis=1)
+    benign_accuracy = np.sum(benign_pred_classes == true_classes) / len(y_test)
+    benign_f1 = f1_score(true_classes, benign_pred_classes, average="weighted")
     print("Accuracy on benign tests: \t{:.2f}%".format(benign_accuracy * 100))
+    print("F1 on benign tests: \t\t{:.4f}".format(benign_f1))
 
     # Step 6: Generate adversarial test examples
     attack = Attack(classifier, **attack_kwargs)
@@ -114,8 +118,11 @@ def run_simple_full_attack(data_file, divide_by, model_filename, Attack, **attac
     # Step 7: Evaluate the ART classifier on adversarial test examples
 
     adversarial_predictions = classifier.predict(x_test_adv)
-    adversarial_accuracy = np.sum(np.argmax(adversarial_predictions, axis=1) == np.argmax(y_test, axis=1)) / len(y_test)
+    adv_pred_classes = np.argmax(adversarial_predictions, axis=1)
+    adversarial_accuracy = np.sum(adv_pred_classes == true_classes) / len(y_test)
+    adversarial_f1 = f1_score(true_classes, adv_pred_classes, average="weighted")
     print("Accuracy on adversarial tests: \t{:.2f}%".format(adversarial_accuracy * 100))
+    print("F1 on adversarial tests: \t{:.4f}".format(adversarial_f1))
 
     print("Difference in accuracy: \t{:.2f}".format(benign_accuracy-adversarial_accuracy))
 
@@ -165,8 +172,12 @@ def test_simple_model(data_file, divide_by, model_filename, Attack, **attack_kwa
     # Step 5: Evaluate the ART classifier on benign test examples
 
     benign_predictions = classifier.predict(x_test)
-    benign_accuracy = np.sum(np.argmax(benign_predictions, axis=1) == np.argmax(y_test, axis=1)) / len(y_test)
+    benign_pred_classes = np.argmax(benign_predictions, axis=1)
+    true_classes = np.argmax(y_test, axis=1)
+    benign_accuracy = np.sum(benign_pred_classes == true_classes) / len(y_test)
+    benign_f1 = f1_score(true_classes, benign_pred_classes, average="weighted")
     print("Accuracy on benign tests: \t{:.2f}%".format(benign_accuracy * 100))
+    print("F1 on benign tests: \t\t{:.4f}".format(benign_f1))
 
     # Step 6: Generate adversarial test examples
     attack = Attack(classifier, **attack_kwargs)
@@ -176,8 +187,11 @@ def test_simple_model(data_file, divide_by, model_filename, Attack, **attack_kwa
     # Step 7: Evaluate the ART classifier on adversarial test examples
 
     adversarial_predictions = classifier.predict(x_test_adv)
-    adversarial_accuracy = np.sum(np.argmax(adversarial_predictions, axis=1) == np.argmax(y_test, axis=1)) / len(y_test)
+    adv_pred_classes = np.argmax(adversarial_predictions, axis=1)
+    adversarial_accuracy = np.sum(adv_pred_classes == true_classes) / len(y_test)
+    adversarial_f1 = f1_score(true_classes, adv_pred_classes, average="weighted")
     print("Accuracy on adversarial tests: \t{:.2f}%".format(adversarial_accuracy * 100))
+    print("F1 on adversarial tests: \t{:.4f}".format(adversarial_f1))
 
     print("Difference in accuracy: \t{:.2f}".format(benign_accuracy-adversarial_accuracy))
 

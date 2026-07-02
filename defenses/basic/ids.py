@@ -22,20 +22,13 @@ data_file = "data/RandomPos_0709.csv"
 bn_model_filename = "RandomPos-full"
 adv_model_filename = "RandomPos-adv-train"
 eps=0.04
-# Step 0: save model
-# run_simple_full_attack(data_file, divide_by, model_fileame, FastGradientMethod, eps=0.1)
 
-# Step 1: test initial model
-print("======\nOriginal Model\n======")
-test_simple_model(data_file, 1, bn_model_filename, FastGradientMethod, eps=eps)
+(x_train, y_train), (x_test, y_test) = create_dataset(data_file=data_file, divide_by=100)
+
 
 # Step 2: adversarial train model
 # Run a simple adversarial ART attack, end to end. model_filename = None to not save the model
 def adv_train(data_file, divide_by, bn_model_filename, adv_model_filename, Attack, **attack_kwargs):
-
-    ## Step 1: Get dataset
-    (x_train, y_train), (x_test, y_test) = create_dataset(data_file=data_file, divide_by=divide_by)
-
 
     ## Step 2: Create the model
     model = SimpleNet()
@@ -65,18 +58,15 @@ def adv_train(data_file, divide_by, bn_model_filename, adv_model_filename, Attac
     attack = Attack(classifier, **attack_kwargs)
 
     x_train_adv = attack.generate(x=x_train)
+    return x_train_adv
 
-    classifier.fit(x_train_adv, y_train, batch_size=64, nb_epochs=5)
 
-    torch.save(classifier.model.state_dict(), f"saved_models/{adv_model_filename}.pth")
-
-adv_train(data_file=data_file,
+x_train_adv = adv_train(data_file=data_file,
           divide_by=2,
           bn_model_filename=bn_model_filename,
           adv_model_filename=adv_model_filename,
           Attack=FastGradientMethod,
           eps=eps)
 
-# Step 3: retest model
-print("\n======\nAdversarially Trained Model\n======")
-test_simple_model(data_file, 1, adv_model_filename, FastGradientMethod, eps=eps)
+print("Negative values in x_train:", np.sum(x_train_adv == 1))
+
