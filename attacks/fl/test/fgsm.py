@@ -12,7 +12,7 @@ import torch.optim as optim
 import numpy as np
 
 from art.estimators.classification import PyTorchClassifier
-from art.attacks.evasion import FastGradientMethod
+from art.attacks.evasion import ProjectedGradientDescent
 from sklearn.preprocessing import MinMaxScaler
 
 sys.path.append(str(Path(__file__).resolve().parents[3]))
@@ -52,11 +52,11 @@ class SequenceCrossEntropy(nn.Module):
         self.loss = nn.CrossEntropyLoss()
 
     def forward(self, a, b):
-        print("A:", a.shape)
-        print("B:", b.shape)
-
+        # ART passes one-hot labels; CrossEntropyLoss needs class indices
+        if b.dim() == 3:
+            b = b.argmax(dim=-1)  # (batch, seq_len, num_classes) → (batch, seq_len)
         return self.loss(
-            a.permute(0, 2, 1),
+            a.permute(0, 2, 1),  # (batch, seq_len, C) → (batch, C, seq_len)
             b.long()
         )
         
@@ -72,7 +72,7 @@ classifier = PyTorchClassifier(
     loss=criterion,
     optimizer=optimizer,
     input_shape=(10, 7),
-    nb_classes=2,
+    nb_classes=20,
     clip_values=None,
 )
 
@@ -91,9 +91,10 @@ data_file = f"data/{data_filename}"
 # print(f"Out: {out}")
 
 # Adversarial test
-attack = FastGradientMethod(estimator=classifier, eps=0.1)
+attack = ProjectedGradientDescent(estimator=classifier, eps=0.2)
 x_test_adv = attack.generate(x=x_test)
 
 adversarial_predictions = classifier.predict(x_test_adv)
-adversarial_accuracy = np.sum(np.argmax(adversarial_predictions, axis=1) == np.argmax(y_test, axis=1)) / len(y_test)
+pred_classes = np.argmax(adversarial_predictions, axis=-1)  # (N, seq_len)
+adversarial_accuracy = np.sum(pred_classes == y_test) / pred_classes.size
 print(f"Adversarial accuracy: {adversarial_accuracy}")

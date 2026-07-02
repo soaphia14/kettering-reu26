@@ -44,7 +44,7 @@ def get_windowed_data(data_file : str = './data/RandomPos_0709.csv', train_perc 
             msg_window = vehicle_msgs[index:index+10]
             veh_windows.append(msg_window)
             index += 5
-        veh_windows = torch.Tensor(veh_windows)
+        veh_windows = torch.Tensor(np.array(veh_windows))
 
         if len(veh_windows) != 0: # Don't add empty data
             windowed_fed_data.append(veh_windows) # Create tensor from per vehicle dataset and add to list of datas.

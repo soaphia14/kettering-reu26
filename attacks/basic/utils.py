@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -64,8 +65,8 @@ class SimpleNet(nn.Module):
 
         return self.fc3(x)
     
-# Run a simple adversarial ART attack, end to end
-def run_simple_full_attack(data_file, divide_by, Attack, **attack_kwargs): 
+# Run a simple adversarial ART attack, end to end. model_filename = None to not save the model
+def run_simple_full_attack(data_file, divide_by, model_filename, Attack, **attack_kwargs): 
     
     ## Step 1: Get dataset
     (x_train, y_train), (x_test, y_test) = create_dataset(data_file=data_file, divide_by=divide_by)
@@ -95,6 +96,9 @@ def run_simple_full_attack(data_file, divide_by, Attack, **attack_kwargs):
     print("TRAINING")
     classifier.fit(x_train, y_train, batch_size=64, nb_epochs=5)
     print("DONE TRAINING")
+    if model_filename:
+        torch.save(classifier.model.state_dict(), f"saved_model/{model_filename}.pth")
+    print("Model saved to model.pth")
     print("----------")
     # Step 5: Evaluate the ART classifier on benign test examples
 
@@ -126,3 +130,66 @@ def run_simple_full_attack(data_file, divide_by, Attack, **attack_kwargs):
     print("----------")
     
     print("Dataset: {}, Divide by: {}".format(data_file, divide_by))
+
+# Run a simple adversarial ART attack, end to end. model_filename = None to not save the model
+def test_simple_model(data_file, divide_by, model_filename, Attack, **attack_kwargs):
+
+    ## Step 1: Get dataset
+    _, (x_test, y_test) = create_dataset(data_file=data_file, divide_by=divide_by)
+
+
+    ## Step 2: Create the model
+    model = SimpleNet()
+
+    # Step 2a: Define the loss function and the optimizer
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
+
+    ## Step 3: Create the ART classifier
+
+    classifier = PyTorchClassifier(
+        model=model,
+        clip_values=(x_test.min(), x_test.max()),
+        loss=criterion,
+        optimizer=optimizer,
+        input_shape=(11,),
+        nb_classes=2,
+    )
+
+    start = time.time()
+    # Step 4: Load model
+    model.load_state_dict(torch.load(f"saved_models/{model_filename}.pth", weights_only=True))
+    model.eval()
+    print("----------")
+    # Step 5: Evaluate the ART classifier on benign test examples
+
+    benign_predictions = classifier.predict(x_test)
+    benign_accuracy = np.sum(np.argmax(benign_predictions, axis=1) == np.argmax(y_test, axis=1)) / len(y_test)
+    print("Accuracy on benign tests: \t{:.2f}%".format(benign_accuracy * 100))
+
+    # Step 6: Generate adversarial test examples
+    attack = Attack(classifier, **attack_kwargs)
+
+    x_test_adv = attack.generate(x=x_test)
+
+    # Step 7: Evaluate the ART classifier on adversarial test examples
+
+    adversarial_predictions = classifier.predict(x_test_adv)
+    adversarial_accuracy = np.sum(np.argmax(adversarial_predictions, axis=1) == np.argmax(y_test, axis=1)) / len(y_test)
+    print("Accuracy on adversarial tests: \t{:.2f}%".format(adversarial_accuracy * 100))
+
+    print("Difference in accuracy: \t{:.2f}".format(benign_accuracy-adversarial_accuracy))
+
+    benign_pred = np.argmax(benign_predictions, axis=1)
+    adv_pred = np.argmax(adversarial_predictions, axis=1)
+
+    changed = np.mean(benign_pred != adv_pred)
+
+    print("Prediction change rate: \t{:.2f}".format(changed))
+    end = time.time()
+    print("Total time (excluding setup): \t{:.2f} s".format((end - start)))
+    print("----------")
+    
+    print("Dataset: {}, Divide by: {}".format(data_file, divide_by))
+
