@@ -11,7 +11,7 @@ from art.estimators.classification import PyTorchClassifier
 from art.attacks.evasion import FastGradientMethod
 from art.defences.preprocessor import FeatureSqueezing
 
-from attacks.basic.utils import create_dataset, SimpleNet
+from utils.functions import create_simple_dataset, SimpleNet
 
 # ----
 # Config
@@ -22,7 +22,7 @@ bit_depth = 6 # squeeze to this many bits (lower = more squeezing)
 
 # ----
 # Step 1: Load data
-(x_train, y_train), (x_test, y_test) = create_dataset(data_file=data_file, divide_by=1)
+(x_train, y_train), (x_test, y_test) = create_simple_dataset(data_file=data_file, divide_by=1)
 
 # ----
 # Step 2: Build classifier WITHOUT feature squeezing (baseline)

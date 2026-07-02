@@ -11,7 +11,7 @@ from sklearn.metrics import f1_score
 from art.estimators.classification import PyTorchClassifier
 from art.attacks.evasion import ZooAttack
 
-from attacks.basic.utils import create_dataset, SimpleNet
+from utils.functions import create_simple_dataset, SimpleNet
 
 # ----
 # Config
@@ -27,7 +27,7 @@ variable_h      = 1e-4  # step size for gradient estimation
 
 # ----
 # Step 1: Load data (use a small subset — ZOO is slow on CPU)
-(_, _), (x_test, y_test) = create_dataset(data_file=data_file, divide_by=1)
+(_, _), (x_test, y_test) = create_simple_dataset(data_file=data_file, divide_by=20)
 x_test_small = x_test # x_test[:200]
 y_test_small = y_test # y_test[:200]
 

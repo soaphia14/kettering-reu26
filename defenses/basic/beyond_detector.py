@@ -12,7 +12,7 @@ from art.estimators.classification import PyTorchClassifier
 from art.attacks.evasion import FastGradientMethod
 from art.defences.detector.evasion import BeyondDetectorPyTorch
 
-from attacks.basic.utils import create_dataset, SimpleNet
+from utils.functions import create_simple_dataset, SimpleNet
 
 # ----
 # Config
@@ -22,7 +22,7 @@ eps = 0.04
 
 # ----
 # Step 1: Load data
-(x_train, y_train), (x_test, y_test) = create_dataset(data_file=data_file, divide_by=1)
+(x_train, y_train), (x_test, y_test) = create_simple_dataset(data_file=data_file, divide_by=1)
 
 # BeyondDetector expects 4D input (batch, channels, height, width).
 # Reshape tabular (N, 11) -> (N, 1, 1, 11) to satisfy this requirement.

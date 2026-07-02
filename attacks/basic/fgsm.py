@@ -1,6 +1,6 @@
 from art.attacks.evasion import FastGradientMethod
 
-from attacks.basic.utils import run_simple_full_attack
+from utils.functions import run_simple_full_attack
 
 ## Step 0: Define constants
 data_file = "data/RandomPos_0709.csv"

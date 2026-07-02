@@ -1,0 +1,1 @@
+{"Loss V PercEvil": [20, 3.0120862325032554], "F1 V PercEvil": [20, 0.004260272653804816], "Recall V PercEvil": [20, 0.006817217981340118], "Precision V PercEvil": [20, 0.0030982201234798033], "Accuracy V PercEvil": [20, 0.0021433333333333335], "Max Per-Vehicle Time": 0.8042528629302979, "Avg Per-Vehicle Time": 0.5959839026133219, "Total Time Per Epoch": 0.5959840218226115}

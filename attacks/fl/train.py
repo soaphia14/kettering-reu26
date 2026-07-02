@@ -21,7 +21,7 @@ import csv
 import sys
 import json
 from attacks.fl.models import OBU, OutLogger
-from utils import get_windowed_data
+from utils.functions import get_windowed_data
 
 # Variables need to define
 
