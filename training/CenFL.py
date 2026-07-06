@@ -15,18 +15,27 @@ import time
 import csv
 import sys
 import json
+from sklearn.preprocessing import MinMaxScaler
 
 torch.set_float32_matmul_precision("high")
+
+start = time.time_ns()
+
 
 batchSize = 64
 
 # FORMATTING DATASET FOR FED. LEARNING
-testName = 'RandPos'
+testName = 'RandPos-Normalized'
 doEvil = False
 percEvil = 20
 dataFile = 'data/RandomPos_0709.csv'
 dataSet = genfromtxt(dataFile, delimiter=',')
 dataSet = np.delete(dataSet, 0, axis=0) # Remove the labels at the beginning of the dataset
+
+# # Normalize the 7 input feature columns (indices 3:10) to [0, 1]
+# scaler = MinMaxScaler()
+# dataSet[:, 3:10] = scaler.fit_transform(dataSet[:, 3:10])
+
 
 # Devide dataset into reciever groups
 fedDataSet = dataSet[np.argsort(dataSet[:, 1])] # Sort dataset by reciver ID
@@ -711,3 +720,8 @@ print(f"SAVE PATH: {savePath}")
 # This was with scheduler, 50, 10, 100. Before accuracy with this was 96.388%, now 27.306%. 
 # Running test with 50, 5, 50, w/out scheduler: 'Model got 1170620/1247740 right. Accuracy: 0.9381922515908763, Precision: 0.8443495151097161, Recall: 0.9709495548961424, F1 Score: 0.90323495386345'
 # Accuracy of 93.820% after half the vehicles and half the epochs. I think we need to rething the scheduler.
+
+
+elapsed_time = time.time_ns()-start
+
+print("Elapsed time (ns):", elapsed_time)

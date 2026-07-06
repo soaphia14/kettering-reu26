@@ -13,6 +13,7 @@ import numpy as np
 
 from art.estimators.classification import PyTorchClassifier
 from art.attacks.evasion import ProjectedGradientDescent
+from art.attacks.evasion import FastGradientMethod
 from sklearn.preprocessing import MinMaxScaler
 
 sys.path.append(str(Path(__file__).resolve().parents[3]))
@@ -25,13 +26,12 @@ from attacks.fl.utils import get_windowed_data, load_model_checkpoint
 
 # ----
 # Input
+checkpoint_file="saved_models/RandomPos-cenFL.ckpt"
 data_filename = "RandomPos_0709.csv"
-ckpt_filename = "mainModelBackup.ckpt"
 train_perc = 80
 
 # ----
 # Load model
-checkpoint_file = f"attacks/fl/checkpoints/{ckpt_filename}"
 model = load_model_checkpoint(checkpoint_file, gpu=False)
 
 class ARTCfCWrapper(nn.Module):
@@ -86,12 +86,18 @@ data_file = f"data/{data_filename}"
 (x_train, y_train), (x_test, y_test), fed_dataset = get_windowed_data(data_file, train_perc)
 
 # ----
-# # Test the model
-# out = model.test(x_test, y_test, mathy=True)
-# print(f"Out: {out}")
+# Test the model
+out = model.test(x_test, y_test, mathy=True)
+print(f"Out: {out}")
+
+# Benign test
+benign_predictions = classifier.predict(x_test)
+benign_pred_classes = np.argmax(benign_predictions, axis=-1)  # (N, seq_len)
+accuracy = np.sum(benign_pred_classes == y_test) / benign_pred_classes.size
+print(f"Benign accuracy: {accuracy}")
 
 # Adversarial test
-attack = ProjectedGradientDescent(estimator=classifier, eps=0.2)
+attack = FastGradientMethod(estimator=classifier, eps=0.2)
 x_test_adv = attack.generate(x=x_test)
 
 adversarial_predictions = classifier.predict(x_test_adv)
