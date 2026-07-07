@@ -30,11 +30,18 @@ doEvil = False
 percEvil = 20
 dataFile = 'data/RandomPos_0709.csv'
 dataSet = genfromtxt(dataFile, delimiter=',')
-dataSet = np.delete(dataSet, 0, axis=0) # Remove the labels at the beginning of the dataset
+dataSet = np.delete(dataSet, 0, axis=0)  # Remove the labels at the beginning of the dataset
 
-# # Normalize the 7 input feature columns (indices 3:10) to [0, 1]
-# scaler = MinMaxScaler()
-# dataSet[:, 3:10] = scaler.fit_transform(dataSet[:, 3:10])
+# --- Split BEFORE fitting the scaler ---
+trainPerc = 80
+splitIdx = int(dataSet.shape[0] * (trainPerc / 100))
+
+# Fit scaler ONLY on the training portion of the raw rows
+scaler = MinMaxScaler()
+scaler.fit(dataSet[:splitIdx, 3:10])
+
+# Transform the ENTIRE dataset using the scaler fit only on training data
+dataSet[:, 3:10] = scaler.transform(dataSet[:, 3:10])
 
 
 # Devide dataset into reciever groups
