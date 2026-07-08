@@ -15,8 +15,7 @@ sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from art.attacks.evasion import FastGradientMethod
 
-from utils.functions import run_simple_full_attack, test_simple_model, create_simple_dataset
-from utils.models import SimpleNet
+from utils.functions import run_simple_full_attack, test_simple_model, create_simple_dataset, SimpleNet
 
 ## Step 0: Define constants
 data_file = "data/RandomPos_0709.csv"

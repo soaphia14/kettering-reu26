@@ -11,8 +11,7 @@ from sklearn.metrics import f1_score
 from art.estimators.classification import PyTorchClassifier
 from art.attacks.evasion import ZooAttack
 
-from utils.functions import create_simple_dataset
-from utils.models import SimpleNet
+from utils.functions import create_simple_dataset, SimpleNet
 
 # ----
 # Config
