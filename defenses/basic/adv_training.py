@@ -15,7 +15,9 @@ sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from art.attacks.evasion import FastGradientMethod
 
-from attacks.basic.utils import run_simple_full_attack, test_simple_model, create_dataset, SimpleNet
+from utils.functions import run_simple_full_attack, test_simple_model, create_simple_dataset
+
+from utils.models import SimpleNet
 
 ## Step 0: Define constants
 data_file = "data/RandomPos_0709.csv"
@@ -34,7 +36,7 @@ test_simple_model(data_file, 1, bn_model_filename, FastGradientMethod, eps=eps)
 def adv_train(data_file, divide_by, bn_model_filename, adv_model_filename, Attack, **attack_kwargs):
 
     ## Step 1: Get dataset
-    (x_train, y_train), (x_test, y_test) = create_dataset(data_file=data_file, divide_by=divide_by)
+    (x_train, y_train), (x_test, y_test) = create_simple_dataset(data_file=data_file, divide_by=divide_by)
 
 
     ## Step 2: Create the model
