@@ -12,8 +12,8 @@ from art.estimators.classification import PyTorchClassifier
 from art.attacks.evasion import FastGradientMethod
 from art.defences.detector.evasion import BeyondDetectorPyTorch
 
-from utils.functions import create_simple_dataset, SimpleNet
-
+from utils.functions import create_simple_dataset
+from utils.models import SimpleNet
 # ----
 # Config
 data_file = "data/RandomPos_0709.csv"

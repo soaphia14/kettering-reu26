@@ -11,7 +11,8 @@ from art.estimators.classification import PyTorchClassifier
 from art.attacks.evasion import FastGradientMethod
 from art.defences.preprocessor import FeatureSqueezing
 
-from utils.functions import create_simple_dataset, SimpleNet
+from utils.functions import create_simple_dataset
+from utils.models import SimpleNet
 
 # ----
 # Config
