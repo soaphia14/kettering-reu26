@@ -25,7 +25,7 @@ start = time.time_ns()
 batchSize = 64
 
 # FORMATTING DATASET FOR FED. LEARNING
-testName = 'RandPos-Normalized'
+testName = 'RandPos-Normalized-Updated'
 doEvil = False
 percEvil = 20
 dataFile = 'data/RandomPos_0709.csv'
