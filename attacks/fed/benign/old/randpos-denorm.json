@@ -1,18 +1,37 @@
 {
     "benign": [
         {
+            "wrapper": false,
+            "collapsedOutput": false,
+            "accuracy": 0.9828824723807696,
+            "precision": 0.9641379419885481,
+            "recall": 0.978858930529575,
+            "f1": 0.9714426699563232
+        },
+                {
+            "wrapper": false,
+            "collapsedOutput": true,
+            "accuracy": 0.9832112459326462,
+            "precision": 0.9643128342104006,
+            "recall": 0.9797491232802805,
+            "f1": 0.9719696949422882
+        },
+        {
             "wrapper": true,
+            "collapsedOutput": false,
             "accuracy": 0.9828824723807696,
             "precision": 0.9830044252696218,
             "recall": 0.9828824723807696,
             "f1": 0.9829195656898114
         },
         {
-            "wrapper": false,
-            "accuracy": 0.9828824723807696,
-            "precision": 0.9641379419885481,
-            "recall": 0.978858930529575,
-            "f1": 0.9714426699563232
+            "wrapper": true,
+            "collapsedOutput": true,
+            "accuracy": 0.9961931171558177,
+            "precision": 0.9961990861326315,
+            "recall": 0.9961931171558177,
+            "f1": 0.9961883773969892
         }
+        
     ]
 }
