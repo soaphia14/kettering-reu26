@@ -1,0 +1,9 @@
+{
+    "endIndex": 124774,
+    "kwargs": {
+        "eps": 0.38
+    },
+    "maliciousSamples": 37070,
+    "evadedSamples": 5186,
+    "attackSuccessRate": 0.13989749123280282
+}
