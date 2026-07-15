@@ -1,0 +1,11 @@
+{
+    "endIndex": 5000,
+    "attack": "SaliencyMapMethod",
+    "kwargs": {
+        "gamma": 0.5
+    },
+    "maliciousSamples": 1786,
+    "evadedSamples": 358,
+    "attackSuccessRate": 0.20044792833146696,
+    "timeElapsedNs": 3012896197518
+}
