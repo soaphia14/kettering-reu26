@@ -1,0 +1,12 @@
+{
+    "endIndex": 124774,
+    "attack": "ProjectedGradientDescent",
+    "kwargs": {
+        "eps": 0.27,
+        "max_iter": 5
+    },
+    "maliciousSamples": 37070,
+    "evadedSamples": 6953,
+    "attackSuccessRate": 0.18756406797949823,
+    "timeElapsedNs": 237993618102
+}
