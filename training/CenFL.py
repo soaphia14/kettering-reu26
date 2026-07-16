@@ -24,27 +24,33 @@ start = time.time_ns()
 
 batchSize = 64
 
-# FORMATTING DATASET FOR FED. LEARNING
-testName = 'RandPos-Normalized-Updated'
+# --- FORMATTING DATASET FOR FED. LEARNING
+testName = 'RandPos-Test'
 doEvil = False
 percEvil = 20
 dataFile = 'data/RandomPos_0709.csv'
+
+# --- Load the dataset
 dataSet = genfromtxt(dataFile, delimiter=',')
 dataSet = np.delete(dataSet, 0, axis=0)  # Remove the labels at the beginning of the dataset
 
-# --- Split BEFORE fitting the scaler ---
+# --- Scale the data
 trainPerc = 80
 splitIdx = int(dataSet.shape[0] * (trainPerc / 100))
 
 # Fit scaler ONLY on the training portion of the raw rows
+# Include last column to make the labels binary
 scaler = MinMaxScaler()
-scaler.fit(dataSet[:splitIdx, 3:10])
+scaler.fit(dataSet[:splitIdx, 3:12])
 
 # Transform the ENTIRE dataset using the scaler fit only on training data
-dataSet[:, 3:10] = scaler.transform(dataSet[:, 3:10])
+dataSet[:, 3:12] = scaler.transform(dataSet[:, 3:12])
 
+# Check that the benign/attack labels are binary
+if not np.all((dataSet[:, 11] == 0) | (dataSet[:, 11] == 1)):
+    raise ValueError("Benign/Attack labels are not binary")
 
-# Devide dataset into reciever groups
+# --- Divide dataset into reciever groups
 fedDataSet = dataSet[np.argsort(dataSet[:, 1])] # Sort dataset by reciver ID
 _, counts = np.unique(fedDataSet[:,1], return_counts=True) # Get the indexes of the change in datasets.
 sum = 0
@@ -88,9 +94,9 @@ dataSet = torch.tensor(newData)
 leng = dataSet.shape[0]
 trainPerc = 80
 # Create seperate datasets for testing and training, using Train Percentage as metric for split
-trainDataIn = torch.Tensor(dataSet[:int(leng*(trainPerc/100)),:,3:10]).float()
+trainDataIn = torch.Tensor(dataSet[:int(leng*(trainPerc/100)),:,3:11]).float()
 trainDataOut = torch.Tensor(np.int_(dataSet[:int(leng*(trainPerc/100)),:,11])).long()
-testDataIn = torch.Tensor(dataSet[int(leng*(trainPerc/100)):,:,3:10]).float()
+testDataIn = torch.Tensor(dataSet[int(leng*(trainPerc/100)):,:,3:11]).float()
 testDataOut = torch.Tensor(np.int_(dataSet[int(leng*(trainPerc/100)):,:,11])).long()
 newsetIn = []
 newsetOut = []
@@ -101,16 +107,16 @@ tinyTestOut = []
 # Create tiny dataset to run verification tests
 for index in range(leng):
     if not (int(index/10) % 300):
-        tinyTestIn.append(dataSet[index, :, 3:10])
+        tinyTestIn.append(dataSet[index, :, 3:11])
         tinyTestOut.append(dataSet[index, :, 11])
 # Create dataset of 1/100th of the entries for quicker testing during development
 for index in range(0,int((leng) * (trainPerc/100))):
     if not (int(index/10) % 100):
-        newsetIn.append(dataSet[index,:,3:10])
+        newsetIn.append(dataSet[index,:,3:11])
         newsetOut.append((dataSet[index,:,11]))
 for idx in range(int((leng) * (trainPerc/100)), leng):
     if not (int(idx/10) % 10):
-        testsetIn.append(dataSet[idx,:,3:10])
+        testsetIn.append(dataSet[idx,:,3:11])
         testsetOut.append((dataSet[idx,:,11]))
 testingIn = torch.Tensor(np.array(newsetIn)).float()
 testingOut = torch.Tensor(np.array(newsetOut)).long()
@@ -214,7 +220,7 @@ class Modena(nn.Module):
 
 # Creating overall model Class
 class OBU():
-    def __init__(self, inputSize, units = 20, motors = 8, outputs = 20, epochs = 10, lr = 0.01, randInt = 0, gpu = False, dataset = None, evil = False):
+    def __init__(self, inputSize, units = 20, motors = 8, outputs = 2, epochs = 10, lr = 0.01, randInt = 0, gpu = False, dataset = None, evil = False):
         if isinstance(inputSize, OBU):
             self.lr = inputSize.lr
             self.epochs = inputSize.epochs
@@ -582,8 +588,8 @@ avgRecallVEpoch = []
 avgPrecisionVEpoch = []
 
 # Create starting models
-mainModel = OBU(7, epochs= subEpochs, gpu = gpu, lr = lr, motors = motors, units = units)
-nextModel = OBU(7, epochs= subEpochs, gpu = gpu, lr = lr, motors = motors, units = units)
+mainModel = OBU(8, epochs= subEpochs, gpu = gpu, lr = lr, motors = motors, units = units)
+nextModel = OBU(8, epochs= subEpochs, gpu = gpu, lr = lr, motors = motors, units = units)
 path = f"FL/{testName}-{doEvil}-{percEvil}-{epochs}-{subEpochs}-{vehicles}/"
 if not os.path.exists(f"out/{path}"):
     os.makedirs(f"out/{path}")
@@ -598,13 +604,13 @@ if not randomVehicles:
         # Add new OBU for each model
         if doEvil:
             if np.random.randint(0,100) < percEvil:
-                models[rcvrID] = OBU(7, epochs = subEpochs, gpu=gpu, lr = lr, motors = motors, units = units, evil = True)
+                models[rcvrID] = OBU(8, epochs = subEpochs, gpu=gpu, lr = lr, motors = motors, units = units, evil = True)
             else:
-                models[rcvrID] = OBU(7, epochs = subEpochs, gpu=gpu, lr = lr, motors = motors, units = units)
+                models[rcvrID] = OBU(8, epochs = subEpochs, gpu=gpu, lr = lr, motors = motors, units = units)
         else:
-            models[rcvrID] = OBU(7, epochs = subEpochs, gpu=gpu, lr = lr, motors = motors, units = units)
+            models[rcvrID] = OBU(8, epochs = subEpochs, gpu=gpu, lr = lr, motors = motors, units = units)
         # Create Slice of dataset
-        vehicle = data.DataLoader(data.TensorDataset(vehicle[:,:,3:10].float(), vehicle[:,:,11].long()), batch_size=batchSize, shuffle=False, num_workers=16, persistent_workers = True) # type: ignore
+        vehicle = data.DataLoader(data.TensorDataset(vehicle[:,:,3:11].float(), vehicle[:,:,11].long()), batch_size=batchSize, shuffle=False, num_workers=16, persistent_workers = True) # type: ignore
         # Add sub - dataset to dataset
         rcvrs.append(rcvrID)
         dataSets[rcvrID]=vehicle
@@ -626,13 +632,13 @@ for epoch in range(epochs):
             if rcvrID not in models:
                 if doEvil:
                     if np.random.randint(0,100) < percEvil:
-                        models[rcvrID] = OBU(7, epochs = subEpochs, gpu=gpu, lr = lr, motors = motors, units = units, evil = True)
+                        models[rcvrID] = OBU(8, epochs = subEpochs, gpu=gpu, lr = lr, motors = motors, units = units, evil = True)
                     else:
-                        models[rcvrID] = OBU(7, epochs = subEpochs, gpu=gpu, lr = lr, motors = motors, units = units)
+                        models[rcvrID] = OBU(8, epochs = subEpochs, gpu=gpu, lr = lr, motors = motors, units = units)
                 else:
-                    models[rcvrID] = OBU(7, epochs = subEpochs, gpu=gpu, lr = lr, motors = motors, units = units)
+                    models[rcvrID] = OBU(8, epochs = subEpochs, gpu=gpu, lr = lr, motors = motors, units = units)
             # Create Slice of dataset
-            vehicle = data.DataLoader(data.TensorDataset(vehicle[:,:,3:10].float(), vehicle[:,:,11].long()), batch_size=batchSize, shuffle=False, num_workers=16, persistent_workers = True)
+            vehicle = data.DataLoader(data.TensorDataset(vehicle[:,:,3:11].float(), vehicle[:,:,11].long()), batch_size=batchSize, shuffle=False, num_workers=16, persistent_workers = True)
             # Add sub - dataset to dataset
             rcvrs.append(rcvrID)
             dataSets[rcvrID]=vehicle
@@ -640,7 +646,7 @@ for epoch in range(epochs):
 
     print(rcvrs, file = open('rcvrs.txt', 'w'))
     # Baseline model to add everything to. !!Do I want this or should it be a completely new model?!! Got 0% on combination before, testing with new model for next model.
-    nextModel = OBU(7, epochs= subEpochs, gpu = gpu, lr = lr, motors = motors, units = units)
+    nextModel = OBU(8, epochs= subEpochs, gpu = gpu, lr = lr, motors = motors, units = units)
     # Train models
     weights = []
     for rcvr in rcvrs:

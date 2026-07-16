@@ -212,15 +212,16 @@ def test_simple_model(data_file, divide_by, model_filename, Attack, **attack_kwa
     print("Dataset: {}, Divide by: {}".format(data_file, divide_by))
 
 # Get windowed data created from a CSV file
-def get_windowed_data(data_file, normalize : bool, train_perc : int = 80, divide_by : int = 1):
+def get_windowed_data(data_file, normalize : bool, train_perc : int = 80, divide_by : int = 1, pair_windows : bool = False):
     ## Get data
     raw_msg_data = genfromtxt(data_file, delimiter=',')
 
     ## Divide dataset into reciever groups
     # scaler = MinMaxScaler()
     raw_msg_data = np.delete(raw_msg_data, 0, axis=0) # Remove the labels at the beginning of the dataset
-    
+
     # Normalize the data
+    scaler = None
     if normalize:
         # Split before scaler
         split_index = int(raw_msg_data.shape[0] * (train_perc / 100))
@@ -262,24 +263,32 @@ def get_windowed_data(data_file, normalize : bool, train_perc : int = 80, divide
     # Time sequences are 10 timepoints (Messages) with 7 features per message.
     # Organized by car, added to one large list.
 
-    _, freqs = np.unique(raw_msg_data[:, 2], return_counts = True)
-
-    sender_index = 0
-    last_sender_coubt = 0
     centr_data = []
 
-    ## Organize dataset into sets of 10 messages by sender
-    while sender_index < freqs.shape[0]:
-        # Loop through sender
-        index = 0
-        while index < freqs[sender_index] - 10:
-            # Loop through messages from sender
-            window = raw_msg_data[last_sender_coubt+index:last_sender_coubt +index+10]
-            centr_data.append(window)
-            index += 5
-        
-        last_sender_coubt += freqs[sender_index]
-        sender_index += 1
+    if pair_windows:
+        ## Organize dataset into sets of 10 messages by (sender, receiver) pair
+        sorted_by_pair = raw_msg_data[np.lexsort((raw_msg_data[:, 1], raw_msg_data[:, 2]))]
+        _, freqs = np.unique(sorted_by_pair[:, [2, 1]], axis=0, return_counts=True)
+        offset = 0
+        for count in freqs:
+            pair_msgs = sorted_by_pair[offset:offset + count]
+            index = 0
+            while index < count - 10:
+                centr_data.append(pair_msgs[index:index + 10])
+                index += 5
+            offset += count
+    else:
+        ## Organize dataset into sets of 10 messages by sender
+        _, freqs = np.unique(raw_msg_data[:, 2], return_counts = True)
+        sender_index = 0
+        last_sender_coubt = 0
+        while sender_index < freqs.shape[0]:
+            index = 0
+            while index < freqs[sender_index] - 10:
+                centr_data.append(raw_msg_data[last_sender_coubt+index:last_sender_coubt+index+10])
+                index += 5
+            last_sender_coubt += freqs[sender_index]
+            sender_index += 1
 
     centr_data = np.array(centr_data)
 
@@ -295,7 +304,7 @@ def get_windowed_data(data_file, normalize : bool, train_perc : int = 80, divide
 
     
 
-    return (x_train, y_train), (x_test, y_test), windowed_fed_data
+    return (x_train, y_train), (x_test, y_test), windowed_fed_data, scaler
 
 # Load a FL-trained model from a checkpoint file
 def load_model_checkpoint(checkpoint_file : str, gpu : bool = False, lr : float = 0.001, motors : int = 8, units : int = 20, subEpochs : int = 10):    
