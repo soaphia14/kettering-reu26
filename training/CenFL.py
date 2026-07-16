@@ -72,7 +72,6 @@ for reciever in fedDataSet: # Go through all vehicle datasets
 fedDataSet = newData
 # Final output of this cell is fedDataSet, a list of the datasets of each vehicle.
 
-
 #PROPER FORMATTING FOR TESTING DATASETS
 #Time sequences are 10 timepoints (Messages) with 7 features per message.
 #Organized by car.
@@ -93,9 +92,8 @@ while sender < counts.shape[0]:
 dataSet = torch.tensor(newData)
 leng = dataSet.shape[0]
 trainPerc = 80
+
 # Create seperate datasets for testing and training, using Train Percentage as metric for split
-trainDataIn = torch.Tensor(dataSet[:int(leng*(trainPerc/100)),:,3:11]).float()
-trainDataOut = torch.Tensor(np.int_(dataSet[:int(leng*(trainPerc/100)),:,11])).long()
 testDataIn = torch.Tensor(dataSet[int(leng*(trainPerc/100)):,:,3:11]).float()
 testDataOut = torch.Tensor(np.int_(dataSet[int(leng*(trainPerc/100)):,:,11])).long()
 newsetIn = []
@@ -122,15 +120,6 @@ testingIn = torch.Tensor(np.array(newsetIn)).float()
 testingOut = torch.Tensor(np.array(newsetOut)).long()
 inTest = torch.Tensor(np.array(testsetIn)).float()
 outTest = torch.Tensor(np.array(testsetOut)).long()
-tinyTestIn = torch.Tensor(np.array(tinyTestIn)).float()
-tinyTestOut = torch.Tensor(np.array(tinyTestOut)).long()
-# Create Dataloaders for all the datasets
-dataLoaderTrain = data.DataLoader(data.TensorDataset(trainDataIn, trainDataOut), batch_size=batchSize, shuffle=False, num_workers=10, persistent_workers = True, drop_last= True)
-dataLoaderTest = data.DataLoader(data.TensorDataset(testDataIn, testDataOut), batch_size=batchSize, shuffle=False, num_workers=10, persistent_workers = True, drop_last= True)
-testingDataLoader = data.DataLoader(data.TensorDataset(testingIn, testingOut), batch_size=batchSize, shuffle = False, num_workers=10, persistent_workers = True, drop_last= True)
-testingTestData = data.DataLoader(data.TensorDataset(testingIn, testingOut), batch_size=batchSize, shuffle = False, num_workers=10, persistent_workers = True, drop_last= True)
-tinyTestLoader = data.DataLoader(data.TensorDataset(tinyTestIn, tinyTestOut), batch_size=batchSize, shuffle = False, num_workers = 10, persistent_workers= True)
-
 
 # Creating Learner
 class CfCLearner(pl.LightningModule):
