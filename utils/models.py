@@ -321,7 +321,6 @@ class OBU():
             outs = np.asarray(self.model(tensor_in)[0])
         outs = torch.from_numpy(outs)
         # Get the label with the maximum confidence for determining classification
-        print(outs.shape)
         _, res = torch.max(outs, 2)
         Pt = Pf = Nt = Nf = 0
         countR = 0

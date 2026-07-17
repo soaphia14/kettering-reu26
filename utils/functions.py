@@ -228,10 +228,10 @@ def get_windowed_data(data_file, normalize : bool, train_perc : int = 80, divide
 
         # Fit scaler ONLY on the training portion of the raw rows
         scaler = MinMaxScaler()
-        scaler.fit(raw_msg_data[:split_index, 3:10])
+        scaler.fit(raw_msg_data[:split_index, 3:12])
 
-        # Scale only training data
-        raw_msg_data[:, 3:10] = scaler.transform(raw_msg_data[:, 3:10])
+        # Scale training and testing data
+        raw_msg_data[:, 3:12] = scaler.transform(raw_msg_data[:, 3:12])
 
     # raw_msg_data = scaler.fit_transform(raw_msg_data)
     sorted_msg_data = raw_msg_data[np.argsort(raw_msg_data[:, 1])] # Sort dataset by receiver ID (receiver id is the 2nd column)
@@ -296,10 +296,10 @@ def get_windowed_data(data_file, normalize : bool, train_perc : int = 80, divide
     length = int(centr_data.shape[0]/divide_by)
     train_end = int(length*(train_perc/100))
 
-    x_train = torch.Tensor(centr_data[:train_end,:,3:10]).float()
+    x_train = torch.Tensor(centr_data[:train_end,:,3:11]).float()
     y_train = (torch.Tensor(centr_data[:train_end, :, 11])).long()
 
-    x_test = torch.Tensor(centr_data[train_end:length,:,3:10]).float() 
+    x_test = torch.Tensor(centr_data[train_end:length,:,3:11]).float() 
     y_test = (torch.Tensor(centr_data[train_end:length, :, 11])).long()
 
     
@@ -308,7 +308,7 @@ def get_windowed_data(data_file, normalize : bool, train_perc : int = 80, divide
 
 # Load a FL-trained model from a checkpoint file
 def load_model_checkpoint(checkpoint_file : str, gpu : bool = False, lr : float = 0.001, motors : int = 8, units : int = 20, subEpochs : int = 10):    
-    model = OBU(7, gpu = gpu, lr = lr, motors = motors, units = units, epochs = subEpochs)
+    model = OBU(8, outputs=2, gpu = gpu, lr = lr, motors = motors, units = units, epochs = subEpochs)
 
     # Load model
     if not os.path.exists(checkpoint_file):
