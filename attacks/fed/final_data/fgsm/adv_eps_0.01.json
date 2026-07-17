@@ -1,7 +1,7 @@
 {
     "endIndex": 124774,
     "attack": "FastGradientMethod",
-    "timeElapsedSec": 20.682662,
+    "timeElapsedSec": 205.232176347,
     "kwargs": {
         "eps": 0.01
     },
