@@ -1,0 +1,24 @@
+{
+    "endIndex": 124774,
+    "attack": "FastGradientMethod",
+    "timeElapsedSec": 200.847578628,
+    "kwargs": {
+        "eps": 0.84
+    },
+    "metrics": {
+        "accuracy": 0.9571024412137143,
+        "precision": 0.9291727894912034,
+        "recall": 0.9262125708119774,
+        "f1": 0.9276903186759595,
+        "attackSuccessRate": 0.07378742918802265,
+        "falsePositiveRate": 0.029841284319985405,
+        "TP": 343347,
+        "TN": 850868,
+        "FP": 26172,
+        "FN": 27353
+    },
+    "files": {
+        "checkpointFile": "../../../saved_models/RandomPos-final.ckpt",
+        "dataFile": "../../../data/RandomPos_0709.csv"
+    }
+}
