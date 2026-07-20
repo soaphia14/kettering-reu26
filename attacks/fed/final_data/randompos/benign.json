@@ -1,0 +1,30 @@
+{
+    "noWrapper": {
+        "accuracy": 0.9863296840687964,
+        "recall": 0.9547720528729431,
+        "precision": 0.9991784882489942,
+        "f1": 0.976470669379591,
+        "falseNegativeRate": 0.04522794712705692,
+        "falsePositiveRate": 0.0003317978655477515,
+        "TP": 353934,
+        "TN": 876749,
+        "FP": 291,
+        "FN": 16766
+    },
+    "wrapper": {
+        "accuracy": 0.9863296840687964,
+        "precision": 0.9991784882489942,
+        "recall": 0.9547720528729431,
+        "f1": 0.976470669379591,
+        "falseNegativeRate": 0.04522794712705692,
+        "falsePositiveRate": 0.0003317978655477515,
+        "TP": 353934,
+        "TN": 876749,
+        "FP": 291,
+        "FN": 16766
+    },
+    "files": {
+        "checkpointFile": "../../../saved_models/RandomPos-final.ckpt",
+        "dataFile": "../../../data/RandomPos_0709.csv"
+    }
+}

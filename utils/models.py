@@ -353,12 +353,21 @@ class OBU():
                 precision = (Pt)/(Pt+Pf)
                 recall = (Pt)/(Pt+Nf)
                 f1 = (2*precision*recall)/(precision+recall)
-                print(precision)
-                print(recall)
-                print("Model got " + str(countR) + "/" + str(total) + " right.")
-                print(f"Accuracy: {accuracy}, Precision: {precision}, Recall: {recall}, F1 Score: {f1}")
-                print(f"{numZero}, {numZero/total * 100}% Zeroes, {total-numZero} Non Zero entries.")
-                return f1, recall, precision, accuracy
+                # print(precision)
+                # print(recall)
+                # print("Model got " + str(countR) + "/" + str(total) + " right.")
+                # print(f"Accuracy: {accuracy}, Precision: {precision}, Recall: {recall}, F1 Score: {f1}")
+                # print(f"{numZero}, {numZero/total * 100}% Zeroes, {total-numZero} Non Zero entries.")
+                return {"accuracy": accuracy,
+                        "recall": recall, 
+                        "precision": precision, 
+                        "f1": f1,
+                        "falseNegativeRate": Nf / (Nf + Pt),
+                        "falsePositiveRate": Pf / (Pf + Nt),
+                        "TP": Pt,
+                        "TN": Nt,
+                        "FP": Pf,
+                        "FN": Nf}
             else:
                 accuracy = (Pt+Nt)/(Pt+Pf+Nf+Nt)
                 print("Model could not complete tests.")
