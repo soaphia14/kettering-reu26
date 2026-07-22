@@ -9,3 +9,7 @@
 __pycache__/
 *.py[cod]
 
+/attacks/fed/data_old
+/attacks/fed/final_data
+
+/attacks/defed/data-test

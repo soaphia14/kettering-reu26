@@ -1,9 +1,0 @@
-{
-    "endIndex": 5000,
-    "attack": "CarliniL2Method",
-    "kwargs": {},
-    "maliciousSamples": 1786,
-    "evadedSamples": 574,
-    "attackSuccessRate": 0.3213885778275476,
-    "timeElapsedNs": 5873938852484
-}

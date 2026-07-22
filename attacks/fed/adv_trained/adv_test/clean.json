@@ -1,0 +1,30 @@
+{
+    "noWrapper": {
+        "accuracy": 0.9973359834580923,
+        "recall": 0.9931912597787969,
+        "precision": 0.9978318373010711,
+        "f1": 0.9955061405263926,
+        "falseNegativeRate": 0.006808740221203129,
+        "falsePositiveRate": 0.0009121590805436468,
+        "TP": 368176,
+        "TN": 876240,
+        "FP": 800,
+        "FN": 2524
+    },
+    "wrapper": {
+        "accuracy": 0.9973359834580923,
+        "precision": 0.9978318373010711,
+        "recall": 0.9931912597787969,
+        "f1": 0.9955061405263926,
+        "falseNegativeRate": 0.006808740221203129,
+        "falsePositiveRate": 0.0009121590805436468,
+        "TP": 368176,
+        "TN": 876240,
+        "FP": 800,
+        "FN": 2524
+    },
+    "files": {
+        "checkpointFile": "../../../defenses/data-test/randpos/adv_final_ckpt/advtrained_RandomPos-final.ckpt",
+        "dataFile": "../../../data/RandomPos_0709.csv"
+    }
+}
