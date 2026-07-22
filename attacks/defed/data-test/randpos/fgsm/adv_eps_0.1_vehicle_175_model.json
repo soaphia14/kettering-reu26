@@ -1,0 +1,24 @@
+{
+    "endIndex": 124774,
+    "attack": "FastGradientMethod",
+    "timeElapsedSec": 16.792041,
+    "kwargs": {
+        "eps": 0.1
+    },
+    "metrics": {
+        "accuracy": 0.8085771074101976,
+        "precision": 0.9981035993834809,
+        "recall": 0.3563663339627731,
+        "f1": 0.5252099169873732,
+        "attackSuccessRate": 0.6436336660372268,
+        "falsePositiveRate": 0.0002861899115205692,
+        "TP": 132105,
+        "TN": 876789,
+        "FP": 251,
+        "FN": 238595
+    },
+    "files": {
+        "checkpointFile": "../../../saved_models/decen/init-test-randpos/*",
+        "dataFile": "../../../data/RandomPos_0709.csv"
+    }
+}

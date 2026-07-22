@@ -1,0 +1,24 @@
+{
+    "endIndex": 124774,
+    "attack": "SaliencyMapMethod",
+    "timeElapsedSec": 282.873046,
+    "kwargs": {
+        "gamma": 0.9
+    },
+    "metrics": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "falseNegativeRate": 0.0,
+        "falsePositiveRate": 0.0,
+        "TP": 37070,
+        "TN": 87704,
+        "FP": 0,
+        "FN": 0
+    },
+    "files": {
+        "checkpointFile": "../../../saved_models/RandomPos-final.ckpt",
+        "dataFile": "../../../data/RandomPos_0709.csv"
+    }
+}

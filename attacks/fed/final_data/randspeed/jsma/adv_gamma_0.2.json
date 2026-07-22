@@ -1,0 +1,24 @@
+{
+    "endIndex": 124774,
+    "attack": "SaliencyMapMethod",
+    "timeElapsedSec": 1303.044076,
+    "kwargs": {
+        "gamma": 0.2
+    },
+    "metrics": {
+        "accuracy": 0.9853735553881418,
+        "precision": 0.996338543867061,
+        "recall": 0.9542756946317777,
+        "f1": 0.974853599724423,
+        "falseNegativeRate": 0.04572430536822228,
+        "falsePositiveRate": 0.001482258505883426,
+        "TP": 35375,
+        "TN": 87574,
+        "FP": 130,
+        "FN": 1695
+    },
+    "files": {
+        "checkpointFile": "../../../saved_models/RandomSpeed-final.ckpt",
+        "dataFile": "../../../data/RandomSpeed_0709.csv"
+    }
+}

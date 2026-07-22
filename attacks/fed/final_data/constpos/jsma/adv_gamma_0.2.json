@@ -1,0 +1,24 @@
+{
+    "endIndex": 124774,
+    "attack": "SaliencyMapMethod",
+    "timeElapsedSec": 214.949047,
+    "kwargs": {
+        "gamma": 0.2
+    },
+    "metrics": {
+        "accuracy": 0.9997916232548447,
+        "precision": 1.0,
+        "recall": 0.9992986242244403,
+        "f1": 0.9996491890870821,
+        "falseNegativeRate": 0.0007013757755597518,
+        "falsePositiveRate": 0.0,
+        "TP": 37044,
+        "TN": 87704,
+        "FP": 0,
+        "FN": 26
+    },
+    "files": {
+        "checkpointFile": "../../../saved_models/ConstantPos-final.ckpt",
+        "dataFile": "../../../data/ConstPos_0709.csv"
+    }
+}

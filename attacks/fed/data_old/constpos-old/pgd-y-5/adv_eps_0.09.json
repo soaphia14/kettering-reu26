@@ -1,0 +1,25 @@
+{
+    "endIndex": 124774,
+    "attack": "ProjectedGradientDescent",
+    "timeElapsedSec": 116.086797,
+    "kwargs": {
+        "eps": 0.09,
+        "max_iter": 5
+    },
+    "metrics": {
+        "accuracy": 0.1072755542019972,
+        "precision": 0.07303357876255871,
+        "recall": 0.17146479633126518,
+        "f1": 0.10243575404589157,
+        "attackSuccessRate": 0.8285352036687348,
+        "falsePositiveRate": 0.9198554227857338,
+        "TP": 63562,
+        "TN": 70290,
+        "FP": 806750,
+        "FN": 307138
+    },
+    "files": {
+        "checkpointFile": "../../../saved_models/ConstantPos-final.ckpt",
+        "dataFile": "../../../data/ConstPos_0709.csv"
+    }
+}

@@ -1,0 +1,30 @@
+{
+    "noWrapper": {
+        "accuracy": 0.9322166476990399,
+        "recall": 0.7718559482060966,
+        "precision": 0.9999895152553036,
+        "f1": 0.8712360884856051,
+        "falseNegativeRate": 0.22814405179390343,
+        "falsePositiveRate": 3.4205965520386756e-06,
+        "TP": 286127,
+        "TN": 877037,
+        "FP": 3,
+        "FN": 84573
+    },
+    "wrapper": {
+        "accuracy": 0.9322166476990399,
+        "precision": 0.9999895152553036,
+        "recall": 0.7718559482060966,
+        "f1": 0.8712360884856051,
+        "falseNegativeRate": 0.22814405179390343,
+        "falsePositiveRate": 3.4205965520386756e-06,
+        "TP": 286127,
+        "TN": 877037,
+        "FP": 3,
+        "FN": 84573
+    },
+    "files": {
+        "checkpointFile": "../../../saved_models/decen/init-test-randpos/vehicle_144_model.ckpt",
+        "dataFile": "../../../data/RandomPos_0709.csv"
+    }
+}

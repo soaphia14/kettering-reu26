@@ -1,0 +1,25 @@
+{
+    "endIndex": 124774,
+    "attack": "ProjectedGradientDescent",
+    "timeElapsedSec": 116.457137,
+    "kwargs": {
+        "eps": 0.16,
+        "max_iter": 5
+    },
+    "metrics": {
+        "accuracy": 0.461759661467934,
+        "precision": 0.2558275039358577,
+        "recall": 0.425203668734826,
+        "f1": 0.31945319862590316,
+        "attackSuccessRate": 0.574796331265174,
+        "falsePositiveRate": 0.5227891544285324,
+        "TP": 157623,
+        "TN": 418533,
+        "FP": 458507,
+        "FN": 213077
+    },
+    "files": {
+        "checkpointFile": "../../../saved_models/RandomSpeed-final.ckpt",
+        "dataFile": "../../../data/RandomSpeed_0709.csv"
+    }
+}
