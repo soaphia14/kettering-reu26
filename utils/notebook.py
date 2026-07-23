@@ -209,15 +209,6 @@ def adv_test(classifier,
         y_in = y_test.numpy()[:end_index]
     true_flat = y_in.flatten()
 
-    # Evasion goal is "make the classifier wrong", not "make it right". FGSM/PGD/CW
-    # treat y as the true label to push AWAY from when targeted=False (their
-    # default) - but SaliencyMapMethod has no targeted flag at all and always
-    # pushes predictions TOWARD y, so passing the true label there tells it to
-    # help the classifier get it right instead of attacking it (this is why F1
-    # climbed toward 1.0 as gamma increased instead of dropping). Passing the
-    # flipped label + targeted=True (where supported) gives every attack the same
-    # "push away from truth" semantics - for a binary softmax/CE classifier this is
-    # bit-for-bit identical to FGSM/PGD's original targeted=False behavior.
     y_attack = 1 - y_in
     attack_kwargs = dict(kwargs)
     if "targeted" not in attack_kwargs and "targeted" in inspect.signature(Attack.__init__).parameters:

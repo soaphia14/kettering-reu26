@@ -13,3 +13,6 @@ __pycache__/
 /attacks/fed/final_data
 
 /attacks/defed/data-test
+/attacks/const/temp
+
+/defenses/fed/data-test
