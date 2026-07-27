@@ -1,0 +1,25 @@
+{
+    "endIndex": 124774,
+    "attack": "FastGradientMethod",
+    "timeElapsedSec": 152.663628484,
+    "kwargs": {
+        "eps": 0.03,
+        "targeted": false
+    },
+    "metrics": {
+        "accuracy": 0.9890586179813102,
+        "precision": 0.9996361682358078,
+        "recall": 0.9635230644726194,
+        "f1": 0.9812474588191339,
+        "falseNegativeRate": 0.036476935527380634,
+        "falsePositiveRate": 0.0001482258505883426,
+        "TP": 357178,
+        "TN": 876910,
+        "FP": 130,
+        "FN": 13522
+    },
+    "files": {
+        "checkpointFile": "../../../saved_models/decen/init-test-randpos/vehicle_66_model.ckpt",
+        "dataFile": "../../../data/RandomPos_0709.csv"
+    }
+}
