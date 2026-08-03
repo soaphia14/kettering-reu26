@@ -11,8 +11,14 @@ __pycache__/
 
 /attacks/fed/data_old
 /attacks/fed/final_data
+/attacks/fed/adv_trained
 
 /attacks/defed/data-test
+/attacks/defed/data-test/fgsm
 /attacks/const/temp
 
 /defenses/fed/data-test
+
+_old/
+
+/attacks/defed/data-test/

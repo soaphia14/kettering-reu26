@@ -16,6 +16,8 @@ from sklearn.preprocessing import MinMaxScaler
 
 sys.path.append(str(Path.cwd().parents[2]))
 
+import matplotlib.pyplot as plt
+
 import os
 
 import torch
@@ -288,6 +290,40 @@ def adv_test(classifier,
 
     return metrics
 
+
+def freeze_attack_cols(attack, freeze_cols=(0,)):
+    """Patches an ART evasion attack in place so it can never move the frozen
+    feature columns (e.g. rcvTime, MssgCount) - a real attacker can't manipulate
+    those, so adversarial training shouldn't let FGSM/PGD touch them either.
+    Without this, AdversarialTrainer can satisfy its training objective by
+    learning to detect tampering on columns that were never attackable in the
+    first place, without ever having to move its decision boundary on the real
+    motion features - which costs nothing in clean accuracy but also buys no
+    real robustness (see adv_test's freeze_cols default, which applies the same
+    restriction at eval time).
+
+    Returns the same attack instance (still a real EvasionAttack, so it still
+    passes AdversarialTrainer's isinstance check) with `generate` overridden.
+
+    Usage: attack = freeze_attack_cols(FastGradientMethod(classifier, eps=eps))
+
+    ** Only freezes the receiveTime column
+    """
+    original_generate = attack.generate
+
+    def generate(x, y=None, **kwargs):
+        mask = np.ones(x.shape[1:], dtype=np.float32)
+        mask[:, freeze_cols] = 0.0
+        x_adv = original_generate(x=x, y=y, mask=mask, **kwargs)
+        # Hard restore in case the underlying attack ignores `mask` entirely
+        # (SaliencyMapMethod, CarliniL2Method - same belt-and-suspenders as adv_test)
+        x_adv[:, :, freeze_cols] = x[:, :, freeze_cols]
+        return x_adv
+
+    attack.generate = generate
+    return attack
+
+
 def get_filename_from_path(file_path : str):
     """
     Get the filename from a filepath.
@@ -295,3 +331,47 @@ def get_filename_from_path(file_path : str):
     Ex: ../../test.ckpt -> test
     """
     return file_path.split("/")[-1].split(".")[0]
+
+
+def display_plot (title, display_metric, x_max : float = 0.31, limit : bool = True):
+    """
+    Provide the rest of the graph after calling plt for 
+    grahping data
+
+    Inputs: 
+    - title, metric (for axis) - should be in correct format already
+    - limit - whether to limit the graph to [0, 1]
+    """
+    
+    plt.title(title)
+    plt.xlabel("Epsilon")
+    plt.ylabel(f"{display_metric} Score")
+    if limit:
+        plt.ylim(0, 1)
+    plt.xlim(0, x_max)
+    plt.grid(True)
+
+    # Add flare to the graph
+    plt.legend()
+    plt.minorticks_on()
+    plt.grid(True, which='minor', linewidth=0.5)
+    plt.grid(True, which='major', linewidth=1.0)
+
+def format_metric(metric : str):
+    """
+    Turn metric into a presentable label.
+    
+    Ex: falsePositiveRate -> False Positive Rate
+    """
+    words = []
+    temp_word = ""
+    for i, letter in enumerate(metric): 
+        if (letter.isupper()):
+            words.append(temp_word)
+            temp_word = ""
+        temp_word += letter
+    else:
+        words.append(temp_word)
+
+    words = [word.capitalize() for word in words]
+    return " ".join(words)

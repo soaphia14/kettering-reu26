@@ -306,6 +306,19 @@ def get_windowed_data(data_file, normalize : bool, train_perc : int = 80, divide
 
     return (x_train, y_train), (x_test, y_test), windowed_fed_data, scaler
 
+def denormalize(x, scaler):
+    """
+    Inverse-transform x (last dim = 8 features, raw csv columns 3:11) back to
+    original units using the MinMaxScaler from get_windowed_data. The scaler was
+    fit on 9 columns (3:12 - it also covers the label column at index 11), one
+    wider than x, so a dummy zero column is padded on before inverting and
+    dropped afterward.
+    """
+    x_np = x.numpy() if hasattr(x, "numpy") else np.asarray(x)
+    flat = x_np.reshape(-1, x_np.shape[-1])
+    padded = np.concatenate([flat, np.zeros((flat.shape[0], 1))], axis=1)
+    return scaler.inverse_transform(padded)[:, :-1].reshape(x_np.shape)
+
 # Load a FL-trained model from a checkpoint file
 def load_model_checkpoint(checkpoint_file : str, gpu : bool = False, lr : float = 0.001, motors : int = 8, units : int = 20, subEpochs : int = 10):    
     model = OBU(8, outputs=2, gpu = gpu, lr = lr, motors = motors, units = units, epochs = subEpochs)
