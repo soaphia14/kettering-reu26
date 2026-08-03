@@ -142,12 +142,36 @@ class OutLogger():
             
 # Creating Learner
 class CfCLearner(pl.LightningModule):
-    def __init__(self, model, lr):
+    def __init__(self, model, lr, adv_train=False, pgd_eps=0.05, pgd_steps=5, pgd_alpha=None):
         super().__init__()
         self.model = model
         self.lr = lr
         self.lossFunc = nn.CrossEntropyLoss()
         self.loss = None
+        # Adversarial training (PGD) settings. Off by default so existing callers are unaffected.
+        self.adv_train = adv_train
+        self.pgd_eps = pgd_eps
+        self.pgd_steps = pgd_steps
+        self.pgd_alpha = pgd_alpha if pgd_alpha is not None else 2.5 * pgd_eps / pgd_steps
+        # Input columns are [rcvTime, RelX, RelY, MssgCount, dVx, dVy, dAx, dAy].
+        # Only the physics-derived fields (RelX, RelY, dVx, dVy, dAx, dAy) are attacker-controlled.
+        physics_mask = torch.zeros(1, 1, 8)
+        physics_mask[..., [1, 2, 4, 5, 6, 7]] = 1.0
+        self.register_buffer("physics_mask", physics_mask)
+
+    # Generate a masked L-infinity PGD adversarial version of a batch of inputs.
+    def _pgd_attack(self, inputs, target):
+        x_adv = inputs.clone().detach()
+        for _ in range(self.pgd_steps):
+            x_adv.requires_grad_(True)
+            output, _ = self.model.forward(x_adv)
+            output = output.permute(0, 2, 1)
+            loss = self.lossFunc(output, target)
+            grad = torch.autograd.grad(loss, x_adv)[0]
+            x_adv = x_adv.detach() + self.pgd_alpha * self.physics_mask * grad.sign()
+            x_adv = inputs + torch.clamp(x_adv - inputs, -self.pgd_eps, self.pgd_eps)
+            x_adv = torch.clamp(x_adv, 0.0, 1.0)
+        return x_adv.detach()
 
     def training_step(self, batch, batch_idx):
         # Get in and out from batch
@@ -156,8 +180,19 @@ class CfCLearner(pl.LightningModule):
         output, _ = self.model.forward(inputs)
         # Reorganize inputs for use with loss function
         output = output.permute(0, 2, 1)
-        # Calculate Loss using Cross Entropy Loss 
-        loss = self.lossFunc(output, target)
+        # Calculate Loss using Cross Entropy Loss
+        clean_loss = self.lossFunc(output, target)
+
+        if self.adv_train:
+            x_adv = self._pgd_attack(inputs, target)
+            adv_output, _ = self.model.forward(x_adv)
+            adv_output = adv_output.permute(0, 2, 1)
+            adv_loss = self.lossFunc(adv_output, target)
+            loss = 0.5 * clean_loss + 0.5 * adv_loss
+            self.log("advLoss", adv_loss, prog_bar=True)
+        else:
+            loss = clean_loss
+
         self.log("trainLoss", loss, prog_bar=True)
         self.loss = loss
         return loss
@@ -228,14 +263,17 @@ class Modena(nn.Module):
 
 # Creating overall model Class
 class OBU():
-    def __init__(self, inputSize, units = 20, motors = 8, outputs = 2, epochs = 10, lr = 0.01, randInt = 0, gpu = False, dataset = None, evil = False):
+    def __init__(self, inputSize, units = 20, motors = 8, outputs = 2, epochs = 10, lr = 0.01, randInt = 0, gpu = False, dataset = None, evil = False, adv_train = False, pgd_eps = 0.05, pgd_steps = 5):
         if isinstance(inputSize, OBU):
             self.lr = inputSize.lr
             self.epochs = inputSize.epochs
             self.gpu = inputSize.gpu
+            self.adv_train = inputSize.adv_train
+            self.pgd_eps = inputSize.pgd_eps
+            self.pgd_steps = inputSize.pgd_steps
             self.model = Modena(inputSize.model)
             self.model.load_state_dict(inputSize.model.state_dict())
-            self.learner = CfCLearner(self.model, self.lr)
+            self.learner = CfCLearner(self.model, self.lr, adv_train=self.adv_train, pgd_eps=self.pgd_eps, pgd_steps=self.pgd_steps)
             self.learner.load_state_dict(inputSize.learner.state_dict())
             self.trainer = pl.Trainer(
                 logger = CSVLogger('log/Fed'), # Set ouput destination of logs, logging accuracy every 50 steps
@@ -248,8 +286,11 @@ class OBU():
             self.lr = lr
             self.epochs = epochs
             self.gpu = gpu
+            self.adv_train = adv_train
+            self.pgd_eps = pgd_eps
+            self.pgd_steps = pgd_steps
             self.model = Modena(inputSize, units, motors, outputs)
-            self.learner = CfCLearner(self.model, lr) # tune units, lr
+            self.learner = CfCLearner(self.model, lr, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps) # tune units, lr
             self.trainer = pl.Trainer(
                 logger = CSVLogger('log/Fed'), # Set ouput destination of logs, logging accuracy every 50 steps
                 max_epochs = epochs, # Number of epochs to train for

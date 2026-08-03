@@ -158,6 +158,9 @@ deep_test = False
 weighing = False
 random_vehicles = False
 do_validation = False
+adv_train = True
+pgd_eps = 0.05
+pgd_steps = 5
 avg_loss_by_epoch = []
 avg_f1_by_epoch = []
 avg_recall_by_epoch = []
@@ -180,11 +183,11 @@ if not random_vehicles:
         # Add new OBU for each model
         if do_evil:
             if np.random.randint(0,100) < perc_evil:
-                models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, evil = True)
+                models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, evil = True, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps)
             else:
-                models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units)
+                models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps)
         else:
-            models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units)
+            models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps)
         # Create Slice of dataset
         vehicle = data.DataLoader(data.TensorDataset(vehicle[:,:,3:11].float(), vehicle[:,:,11].long()), batch_size=batch_size, shuffle=False, num_workers=16, persistent_workers = True) # type: ignore
         # Add sub - dataset to dataset
@@ -208,11 +211,11 @@ for epoch in range(epochs):
             if receiver_id not in models:
                 if do_evil:
                     if np.random.randint(0,100) < perc_evil:
-                        models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, evil = True)
+                        models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, evil = True, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps)
                     else:
-                        models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units)
+                        models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps)
                 else:
-                    models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units)
+                    models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps)
             # Create Slice of dataset
             vehicle = data.DataLoader(data.TensorDataset(vehicle[:,:,3:11].float(), vehicle[:,:,11].long()), batch_size=batch_size, shuffle=False, num_workers=16, persistent_workers = True)
             # Add sub - dataset to dataset
