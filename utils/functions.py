@@ -331,5 +331,5 @@ def load_model_checkpoint(checkpoint_file : str, gpu : bool = False, lr : float 
         print("Checkpoint path exists!")
 
     checkpoint = torch.load(checkpoint_file)
-    model.learner.load_state_dict(checkpoint)
+    model.learner.load_state_dict(checkpoint, strict=False)
     return model

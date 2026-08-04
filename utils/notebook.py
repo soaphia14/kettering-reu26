@@ -333,10 +333,10 @@ def get_filename_from_path(file_path : str):
     return file_path.split("/")[-1].split(".")[0]
 
 
-def display_plot (title, display_metric, x_max : float = 0.31, limit : bool = True):
+def display_plot (title, display_metric, x : tuple[float, float], y : tuple[float, float], x_metric : str = "Epsilon"):
     """
     Provide the rest of the graph after calling plt for 
-    grahping data
+    graphing data
 
     Inputs: 
     - title, metric (for axis) - should be in correct format already
@@ -344,11 +344,11 @@ def display_plot (title, display_metric, x_max : float = 0.31, limit : bool = Tr
     """
     
     plt.title(title)
-    plt.xlabel("Epsilon")
+    plt.xlabel(x_metric)
     plt.ylabel(f"{display_metric} Score")
-    if limit:
-        plt.ylim(0, 1)
-    plt.xlim(0, x_max)
+
+    plt.xlim(x[0], x[1])
+    plt.ylim(y[0], y[1])
     plt.grid(True)
 
     # Add flare to the graph

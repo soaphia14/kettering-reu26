@@ -160,15 +160,23 @@ class CfCLearner(pl.LightningModule):
         self.register_buffer("physics_mask", physics_mask)
 
     # Generate a masked L-infinity PGD adversarial version of a batch of inputs.
+    # Only attacker-labeled (target == 1) messages within each window are perturbed;
+    # benign messages are left untouched, and only attacker-labeled messages drive
+    # the attack's loss.
     def _pgd_attack(self, inputs, target):
+        attack_mask = (target == 1)  # (batch, seq_len)
+        time_mask = attack_mask.float().unsqueeze(-1)  # (batch, seq_len, 1)
+        combined_mask = self.physics_mask * time_mask  # (batch, seq_len, 8)
+
         x_adv = inputs.clone().detach()
         for _ in range(self.pgd_steps):
             x_adv.requires_grad_(True)
             output, _ = self.model.forward(x_adv)
             output = output.permute(0, 2, 1)
-            loss = self.lossFunc(output, target)
+            per_elem_loss = nn.functional.cross_entropy(output, target, reduction="none")
+            loss = (per_elem_loss * attack_mask).sum() / attack_mask.sum()
             grad = torch.autograd.grad(loss, x_adv)[0]
-            x_adv = x_adv.detach() + self.pgd_alpha * self.physics_mask * grad.sign()
+            x_adv = x_adv.detach() + self.pgd_alpha * combined_mask * grad.sign()
             x_adv = inputs + torch.clamp(x_adv - inputs, -self.pgd_eps, self.pgd_eps)
             x_adv = torch.clamp(x_adv, 0.0, 1.0)
         return x_adv.detach()
@@ -184,12 +192,22 @@ class CfCLearner(pl.LightningModule):
         clean_loss = self.lossFunc(output, target)
 
         if self.adv_train:
-            x_adv = self._pgd_attack(inputs, target)
-            adv_output, _ = self.model.forward(x_adv)
-            adv_output = adv_output.permute(0, 2, 1)
-            adv_loss = self.lossFunc(adv_output, target)
-            loss = 0.5 * clean_loss + 0.5 * adv_loss
-            self.log("advLoss", adv_loss, prog_bar=True)
+            # Only run adversarial training on windows that contain at least one
+            # attacker-labeled message; windows that are entirely benign are skipped.
+            seq_has_attacker = (target == 1).any(dim=1)
+            if seq_has_attacker.any():
+                x_mal = inputs[seq_has_attacker]
+                y_mal = target[seq_has_attacker]
+                x_adv = self._pgd_attack(x_mal, y_mal)
+                adv_output, _ = self.model.forward(x_adv)
+                adv_output = adv_output.permute(0, 2, 1)
+                attack_mask = (y_mal == 1)
+                per_elem_adv_loss = nn.functional.cross_entropy(adv_output, y_mal, reduction="none")
+                adv_loss = (per_elem_adv_loss * attack_mask).sum() / attack_mask.sum()
+                loss = 0.5 * clean_loss + 0.5 * adv_loss
+                self.log("advLoss", adv_loss, prog_bar=True)
+            else:
+                loss = clean_loss
         else:
             loss = clean_loss
 
