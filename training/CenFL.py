@@ -26,8 +26,6 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 from utils.models import CfCLearner, Modena, OutLogger, OBU
 
 start_time = time.time_ns()
-
-
 batch_size = 64
 
 # --- FORMATTING DATASET FOR FED. LEARNING
@@ -35,6 +33,10 @@ test_name = 'RandPos-Test-Evasion'
 do_evil = False
 perc_evil = 20
 data_file = 'data/RandomPos_0709.csv'
+
+sub_epochs = 5 # 30
+epochs = 5 # 30
+vehicle_count = 5 # 200
 
 # --- Load the dataset
 data_set = genfromtxt(data_file, delimiter=',')
@@ -146,9 +148,7 @@ cars = []
 receiver_ids = []
 accuracy_by_receiver = {}
 state_by_receiver = {}
-sub_epochs = 5 # 30
-epochs = 5 # 30
-vehicle_count = 5 # 200
+
 lr = 0.01
 motors = 8
 units = 20
