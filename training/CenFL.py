@@ -267,7 +267,7 @@ for epoch in range(epochs):
     # combine models
     weights = np.abs(weights)/np.sum(weights)
 
-    log.updateLogs([models[receiver_id] for receiver_id in receiver_ids], epoch)
+    log.updateLogs([models[receiver_id] for receiver_id in receiver_ids], epoch, val_in, val_out)
 
     weight_sum=0
     for weight in weights:
@@ -286,7 +286,7 @@ for epoch in range(epochs):
     else:
         main_model.setState(dict((key, next_state.get(key, 0)/count) for key in next_state)) # No weights
 # Test combined model at end
-log.finalLogs([models[receiver_id] for receiver_id in receiver_ids], perc_evil)
+log.finalLogs(perc_evil)
 accuracy = main_model.test(test_data_in, test_data_out)
 results['FINAL'] = [-1, -1, accuracy]
 evil_ids = []
