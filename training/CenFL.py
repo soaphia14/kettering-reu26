@@ -25,19 +25,46 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from utils.models import CfCLearner, Modena, OutLogger, OBU
 
-start_time = time.time_ns()
-batch_size = 64
+# --- Running Hyperparameters
+# Adv Training Hyperparameters
+pgd_attacker_only = True
+pgd_eps = 0.05
 
-# --- FORMATTING DATASET FOR FED. LEARNING
-test_name = 'RandPos-Test-Evasion'
-do_evil = False
-perc_evil = 20
-data_file = 'data/RandomPos_0709.csv'
-
+# Epochs and vehicle count
 sub_epochs = 5 # 30
 epochs = 5 # 30
 vehicle_count = 5 # 200
 
+# Test parameters
+test_name = 'RandPos-Test-Evasion'
+data_file = 'data/RandomPos_0709.csv'
+
+# Important parameters to stay consistent
+ratio = 0.5
+pgd_steps = 5
+batch_size = 64
+
+"""
+Defining parameters here (to keep the above cleaner).
+- ratio
+    Fraction of each batch's windows to replace with their adversarial version
+    during adv_train (ART AdversarialTrainer-style single-pass mixing).
+- pgd_attacker_only
+    If True, the PGD attack may only perturb attacker-labeled messages; if
+    False, it may perturb every message in a selected window regardless of label.
+- pgd_eps
+    The pertubation epsilon for the PGD attack.
+- pgd_steps
+    The number of PGD steps to take when generating adversarial examples.
+    
+"""
+
+# --- Varibales that don't need to be changed
+do_evil = False # Evil is unused
+perc_evil = 20 # Evil is unused
+start_time = time.time_ns()
+
+# --- FORMATTING DATASET FOR FED. LEARNING
 # --- Load the dataset
 data_set = genfromtxt(data_file, delimiter=',')
 data_set = np.delete(data_set, 0, axis=0)  # Remove the labels at the beginning of the dataset
@@ -152,15 +179,12 @@ state_by_receiver = {}
 lr = 0.01
 motors = 8
 units = 20
-batch_size = 64
 gpu = True
 deep_test = False
 weighing = False
 random_vehicles = False
 do_validation = False
 adv_train = True
-pgd_eps = 0.05
-pgd_steps = 5
 avg_loss_by_epoch = []
 avg_f1_by_epoch = []
 avg_recall_by_epoch = []
@@ -183,11 +207,11 @@ if not random_vehicles:
         # Add new OBU for each model
         if do_evil:
             if np.random.randint(0,100) < perc_evil:
-                models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, evil = True, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps)
+                models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, evil = True, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps, ratio=ratio, pgd_attacker_only=pgd_attacker_only)
             else:
-                models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps)
+                models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps, ratio=ratio, pgd_attacker_only=pgd_attacker_only)
         else:
-            models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps)
+            models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps, ratio=ratio, pgd_attacker_only=pgd_attacker_only)
         # Create Slice of dataset
         vehicle = data.DataLoader(data.TensorDataset(vehicle[:,:,3:11].float(), vehicle[:,:,11].long()), batch_size=batch_size, shuffle=False, num_workers=16, persistent_workers = True) # type: ignore
         # Add sub - dataset to dataset
@@ -211,11 +235,11 @@ for epoch in range(epochs):
             if receiver_id not in models:
                 if do_evil:
                     if np.random.randint(0,100) < perc_evil:
-                        models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, evil = True, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps)
+                        models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, evil = True, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps, ratio=ratio, pgd_attacker_only=pgd_attacker_only)
                     else:
-                        models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps)
+                        models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps, ratio=ratio, pgd_attacker_only=pgd_attacker_only)
                 else:
-                    models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps)
+                    models[receiver_id] = OBU(8, epochs = sub_epochs, gpu=gpu, lr = lr, motors = motors, units = units, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps, ratio=ratio, pgd_attacker_only=pgd_attacker_only)
             # Create Slice of dataset
             vehicle = data.DataLoader(data.TensorDataset(vehicle[:,:,3:11].float(), vehicle[:,:,11].long()), batch_size=batch_size, shuffle=False, num_workers=16, persistent_workers = True)
             # Add sub - dataset to dataset

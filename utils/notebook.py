@@ -324,6 +324,37 @@ def freeze_attack_cols(attack, freeze_cols=(0,)):
     return attack
 
 
+def freeze_benign_and_cols(attack, freeze_cols=(0,), attacker_code : int = 1):
+    """Patches an ART evasion attack in place so it can only perturb messages
+    labeled attacker_code (default 1), in addition to freezing the given
+    feature columns (see freeze_attack_cols).
+
+    A real attacker only controls their own malicious messages, not benign
+    traffic from other vehicles, so adversarial training shouldn't let
+    FGSM/PGD move benign timesteps either - windows that are entirely benign
+    end up with an all-zero mask and pass through generate() unperturbed.
+
+    Usage: attack = freeze_benign_and_cols(ProjectedGradientDescent(classifier, eps=eps), freeze_cols=(0, 3))
+    """
+    original_generate = attack.generate
+
+    def generate(x, y=None, **kwargs):
+        mask = np.ones(x.shape, dtype=np.float32)
+        mask[:, :, freeze_cols] = 0.0
+        benign = None
+        if y is not None:
+            benign = (y != attacker_code)
+            mask[benign] = 0.0
+        x_adv = original_generate(x=x, y=y, mask=mask, **kwargs)
+        x_adv[:, :, freeze_cols] = x[:, :, freeze_cols]
+        if benign is not None:
+            x_adv[benign] = x[benign]
+        return x_adv
+
+    attack.generate = generate
+    return attack
+
+
 def get_filename_from_path(file_path : str):
     """
     Get the filename from a filepath.

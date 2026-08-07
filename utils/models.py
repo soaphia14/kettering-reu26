@@ -142,7 +142,7 @@ class OutLogger():
             
 # Creating Learner
 class CfCLearner(pl.LightningModule):
-    def __init__(self, model, lr, adv_train=False, pgd_eps=0.05, pgd_steps=5, pgd_alpha=None):
+    def __init__(self, model, lr, adv_train=False, pgd_eps=0.05, pgd_steps=5, pgd_alpha=None, ratio=0.5, pgd_attacker_only=True):
         super().__init__()
         self.model = model
         self.lr = lr
@@ -153,6 +153,14 @@ class CfCLearner(pl.LightningModule):
         self.pgd_eps = pgd_eps
         self.pgd_steps = pgd_steps
         self.pgd_alpha = pgd_alpha if pgd_alpha is not None else 2.5 * pgd_eps / pgd_steps
+        # Fraction of each batch's windows to replace with their adversarial
+        # version (ART AdversarialTrainer-style single-pass mixing - see
+        # training_step). The rest of the batch stays untouched.
+        self.ratio = ratio
+        # If True, the PGD attack may only move attacker-labeled (target==1)
+        # messages within a selected window; if False, it may move every
+        # message in the window regardless of label.
+        self.pgd_attacker_only = pgd_attacker_only
         # Input columns are [rcvTime, RelX, RelY, MssgCount, dVx, dVy, dAx, dAy].
         # Only the physics-derived fields (RelX, RelY, dVx, dVy, dAx, dAy) are attacker-controlled.
         physics_mask = torch.zeros(1, 1, 8)
@@ -160,12 +168,14 @@ class CfCLearner(pl.LightningModule):
         self.register_buffer("physics_mask", physics_mask)
 
     # Generate a masked L-infinity PGD adversarial version of a batch of inputs.
-    # Only attacker-labeled (target == 1) messages within each window are perturbed;
-    # benign messages are left untouched, and only attacker-labeled messages drive
-    # the attack's loss.
+    # When pgd_attacker_only is True, only attacker-labeled (target == 1)
+    # messages within each window are perturbed; benign messages are left
+    # untouched. When False, every message in the window is eligible.
     def _pgd_attack(self, inputs, target):
-        attack_mask = (target == 1)  # (batch, seq_len)
-        time_mask = attack_mask.float().unsqueeze(-1)  # (batch, seq_len, 1)
+        if self.pgd_attacker_only:
+            time_mask = (target == 1).float().unsqueeze(-1)  # (batch, seq_len, 1)
+        else:
+            time_mask = torch.ones(target.shape[0], target.shape[1], 1, device=target.device)
         combined_mask = self.physics_mask * time_mask  # (batch, seq_len, 8)
 
         x_adv = inputs.clone().detach()
@@ -173,8 +183,7 @@ class CfCLearner(pl.LightningModule):
             x_adv.requires_grad_(True)
             output, _ = self.model.forward(x_adv)
             output = output.permute(0, 2, 1)
-            per_elem_loss = nn.functional.cross_entropy(output, target, reduction="none")
-            loss = (per_elem_loss * attack_mask).sum() / attack_mask.sum()
+            loss = self.lossFunc(output, target)
             grad = torch.autograd.grad(loss, x_adv)[0]
             x_adv = x_adv.detach() + self.pgd_alpha * combined_mask * grad.sign()
             x_adv = inputs + torch.clamp(x_adv - inputs, -self.pgd_eps, self.pgd_eps)
@@ -184,32 +193,25 @@ class CfCLearner(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         # Get in and out from batch
         inputs, target = batch
-        # Put input through model
-        output, _ = self.model.forward(inputs)
+
+        if self.adv_train:
+            # ART AdversarialTrainer-style mixing: replace a random `ratio`
+            # fraction of the batch's windows with their adversarial version,
+            # leave the rest untouched, and run a single forward/loss pass
+            # over the resulting mixed batch.
+            batch_size = inputs.shape[0]
+            nb_adv = int(np.ceil(self.ratio * batch_size))
+            adv_ids = torch.randperm(batch_size, device=inputs.device)[:nb_adv]
+            x_mixed = inputs.clone()
+            x_mixed[adv_ids] = self._pgd_attack(inputs[adv_ids], target[adv_ids])
+            output, _ = self.model.forward(x_mixed)
+        else:
+            output, _ = self.model.forward(inputs)
+
         # Reorganize inputs for use with loss function
         output = output.permute(0, 2, 1)
         # Calculate Loss using Cross Entropy Loss
-        clean_loss = self.lossFunc(output, target)
-
-        if self.adv_train:
-            # Only run adversarial training on windows that contain at least one
-            # attacker-labeled message; windows that are entirely benign are skipped.
-            seq_has_attacker = (target == 1).any(dim=1)
-            if seq_has_attacker.any():
-                x_mal = inputs[seq_has_attacker]
-                y_mal = target[seq_has_attacker]
-                x_adv = self._pgd_attack(x_mal, y_mal)
-                adv_output, _ = self.model.forward(x_adv)
-                adv_output = adv_output.permute(0, 2, 1)
-                attack_mask = (y_mal == 1)
-                per_elem_adv_loss = nn.functional.cross_entropy(adv_output, y_mal, reduction="none")
-                adv_loss = (per_elem_adv_loss * attack_mask).sum() / attack_mask.sum()
-                loss = 0.5 * clean_loss + 0.5 * adv_loss
-                self.log("advLoss", adv_loss, prog_bar=True)
-            else:
-                loss = clean_loss
-        else:
-            loss = clean_loss
+        loss = self.lossFunc(output, target)
 
         self.log("trainLoss", loss, prog_bar=True)
         self.loss = loss
@@ -281,7 +283,7 @@ class Modena(nn.Module):
 
 # Creating overall model Class
 class OBU():
-    def __init__(self, inputSize, units = 20, motors = 8, outputs = 2, epochs = 10, lr = 0.01, randInt = 0, gpu = False, dataset = None, evil = False, adv_train = False, pgd_eps = 0.05, pgd_steps = 5):
+    def __init__(self, inputSize, units = 20, motors = 8, outputs = 2, epochs = 10, lr = 0.01, randInt = 0, gpu = False, dataset = None, evil = False, adv_train = False, pgd_eps = 0.05, pgd_steps = 5, ratio = 0.5, pgd_attacker_only = True):
         if isinstance(inputSize, OBU):
             self.lr = inputSize.lr
             self.epochs = inputSize.epochs
@@ -289,9 +291,11 @@ class OBU():
             self.adv_train = inputSize.adv_train
             self.pgd_eps = inputSize.pgd_eps
             self.pgd_steps = inputSize.pgd_steps
+            self.ratio = inputSize.ratio
+            self.pgd_attacker_only = inputSize.pgd_attacker_only
             self.model = Modena(inputSize.model)
             self.model.load_state_dict(inputSize.model.state_dict())
-            self.learner = CfCLearner(self.model, self.lr, adv_train=self.adv_train, pgd_eps=self.pgd_eps, pgd_steps=self.pgd_steps)
+            self.learner = CfCLearner(self.model, self.lr, adv_train=self.adv_train, pgd_eps=self.pgd_eps, pgd_steps=self.pgd_steps, ratio=self.ratio, pgd_attacker_only=self.pgd_attacker_only)
             self.learner.load_state_dict(inputSize.learner.state_dict())
             self.trainer = pl.Trainer(
                 logger = CSVLogger('log/Fed'), # Set ouput destination of logs, logging accuracy every 50 steps
@@ -307,8 +311,10 @@ class OBU():
             self.adv_train = adv_train
             self.pgd_eps = pgd_eps
             self.pgd_steps = pgd_steps
+            self.ratio = ratio
+            self.pgd_attacker_only = pgd_attacker_only
             self.model = Modena(inputSize, units, motors, outputs)
-            self.learner = CfCLearner(self.model, lr, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps) # tune units, lr
+            self.learner = CfCLearner(self.model, lr, adv_train=adv_train, pgd_eps=pgd_eps, pgd_steps=pgd_steps, ratio=ratio, pgd_attacker_only=pgd_attacker_only) # tune units, lr
             self.trainer = pl.Trainer(
                 logger = CSVLogger('log/Fed'), # Set ouput destination of logs, logging accuracy every 50 steps
                 max_epochs = epochs, # Number of epochs to train for
