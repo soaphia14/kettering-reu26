@@ -24,22 +24,26 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from utils.models import CfCLearner, Modena, OutLogger, OBU
+from utils.notebook import FilenameLoader
 
 # --- Running Hyperparameters
+# Test parameters
+_, data_name, _ = FilenameLoader.rand_pos()
+data_file = f"data/{data_name}"
+
+# Epochs and vehicle count (already acounted for in the folder name)
+sub_epochs = 30 # 30
+epochs = 30 # 30
+vehicle_count = 200 # 200
+
 # Adv Training Hyperparameters
-pgd_attacker_only = True
+pgd_attacker_only = False
 pgd_eps = 0.05
 
-# Epochs and vehicle count
-sub_epochs = 5 # 30
-epochs = 5 # 30
-vehicle_count = 5 # 200
-
-# Test parameters
-test_name = 'RandPos-Test-Evasion'
-data_file = 'data/RandomPos_0709.csv'
-
 # Important parameters to stay consistent
+targeted_name = "Targeted" if pgd_attacker_only else "General"
+data_name = "RandPos" if "RandomPos" in data_file else ("RandSpeed" if "RandomSpeed" in data_file else "ConstPos")
+test_name = f'{data_name}-{pgd_eps}-{targeted_name}'
 ratio = 0.5
 pgd_steps = 5
 batch_size = 64
@@ -193,7 +197,7 @@ avg_precision_by_epoch = []
 # Create starting models
 main_model = OBU(8, epochs= sub_epochs, gpu = gpu, lr = lr, motors = motors, units = units)
 next_model = OBU(8, epochs= sub_epochs, gpu = gpu, lr = lr, motors = motors, units = units)
-path = f"FL/{test_name}-{do_evil}-{perc_evil}-{epochs}-{sub_epochs}-{vehicle_count}/"
+path = f"FL/{test_name}-{epochs}-{sub_epochs}-{vehicle_count}/"
 if not os.path.exists(f"out/{path}"):
     os.makedirs(f"out/{path}")
 
