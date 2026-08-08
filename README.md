@@ -12,16 +12,14 @@ source .venv/bin/activate # activate venv
 
 sudo apt install python3-pip # install pip
 
-pip install ncps
-
-
-pip install numpy
-
 
 pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu126
 
+pip install ncps numpy lightning matplotlib
 
+pip install -U scikit-learn
 
+pip install adversarial-robustness-toolbox
 
 
 If need to commit/push:
