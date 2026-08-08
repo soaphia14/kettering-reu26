@@ -28,13 +28,13 @@ from utils.notebook import FilenameLoader
 
 # --- Running Hyperparameters
 # Test parameters
-_, data_name, _ = FilenameLoader.rand_pos()
+_, data_name, _ = FilenameLoader.rand_speed()
 data_file = f"data/{data_name}"
 
 # Epochs and vehicle count (already acounted for in the folder name)
 sub_epochs = 30 # 30
 epochs = 30 # 30
-vehicle_count = 200 # 200
+vehicle_count = 20 # 200
 
 # Adv Training Hyperparameters
 pgd_attacker_only = False
@@ -43,10 +43,17 @@ pgd_eps = 0.05
 # Important parameters to stay consistent
 targeted_name = "Targeted" if pgd_attacker_only else "General"
 data_name = "RandPos" if "RandomPos" in data_file else ("RandSpeed" if "RandomSpeed" in data_file else "ConstPos")
-test_name = f'{data_name}-{pgd_eps}-{targeted_name}'
+test_name = f'{data_name}-{targeted_name}-{pgd_eps}'
 ratio = 0.5
 pgd_steps = 5
 batch_size = 64
+
+print("SAVING TO: ", f"FL/{test_name}-{epochs}-{sub_epochs}-{vehicle_count}/")
+
+confirm = input("Confirm? (y/N)")
+
+if confirm.lower() != "y":
+    input("STOP PROGRAM - ctrl + c to stop")
 
 """
 Defining parameters here (to keep the above cleaner).
