@@ -20,3 +20,12 @@ pip install numpy
 
 pip3 install torch torchvision --index-url https://download.pytorch.org/whl/cu126
 
+
+
+
+
+If need to commit/push:
+
+git config --global user.name "soaphia14"
+
+git config --global user.email "sliu@kettering.edu"
