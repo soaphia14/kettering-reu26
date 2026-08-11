@@ -21,7 +21,6 @@ import matplotlib.pyplot as plt
 import os
 
 import torch
-from utils.models import OBU
 from utils.functions import get_windowed_data, load_model_checkpoint
 
 from sklearn.metrics import precision_score, recall_score, f1_score
@@ -35,11 +34,11 @@ class FilenameLoader():
     """
     
     def const_pos():
-        return "ConstantPos-final.ckpt", "ConstPos_0709.csv", "constpos"
+        return "ConstantPos-final.ckpt", "ConstPos_0709.csv", "constpos", "ConstPos"
     def rand_pos():
-        return "RandomPos-final.ckpt", "RandomPos_0709.csv", "randpos"
+        return "RandomPos-final.ckpt", "RandomPos_0709.csv", "randpos", "RandPos"
     def rand_speed():
-        return "RandomSpeed-final.ckpt", "RandomSpeed_0709.csv", "randspeed"
+        return "RandomSpeed-final.ckpt", "RandomSpeed_0709.csv", "randspeed", "RandSpeed"
 
 class SequenceCrossEntropy(nn.Module):
     """
@@ -101,7 +100,7 @@ def get_model_classifier (checkpoint_file : str, collapsed : bool = False):
         loss=criterion,
         optimizer=optimizer,
         input_shape=(10, 8),
-        nb_classes=2, # the range [0, 3]; WRONG: the number of unique classes in y_test, len(np.unique(y_test.numpy()))
+        nb_classes=2,
         clip_values=(0.0, 1.0), # for normalized
         device_type="cpu"
     )
@@ -159,10 +158,11 @@ def clean_data_test(model, classifier,
     no_wrapper_out = model.test(x_test, y_test, mathy=True)
 
     # Wrapper
+    y_test_np = y_test.numpy() if isinstance(y_test, torch.Tensor) else y_test
     if collapsed:
-        benign_y_test = (y_test.numpy() == attacker_code).all(axis=1).astype(np.int64)
+        benign_y_test = (y_test_np == attacker_code).all(axis=1).astype(np.int64)
     else:
-        benign_y_test = y_test.numpy()
+        benign_y_test = y_test_np
     benign_predictions = classifier.predict(x_test, batch_size=64)
 
     wrapper_out = calculate_metrics(benign_predictions, benign_y_test)
@@ -376,7 +376,7 @@ def display_plot (title, display_metric, x : tuple[float, float], y : tuple[floa
     
     plt.title(title)
     plt.xlabel(x_metric)
-    plt.ylabel(f"{display_metric} Score")
+    plt.ylabel(f"{display_metric}")
 
     plt.xlim(x[0], x[1])
     plt.ylim(y[0], y[1])

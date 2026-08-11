@@ -24,7 +24,7 @@ from numpy import genfromtxt
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
-from utils.models import OBU
+from utils.models import OBUTesting
 
 torch.set_float32_matmul_precision("high")
 from utils.models import SimpleNet
@@ -321,7 +321,7 @@ def denormalize(x, scaler):
 
 # Load a FL-trained model from a checkpoint file
 def load_model_checkpoint(checkpoint_file : str, gpu : bool = False, lr : float = 0.001, motors : int = 8, units : int = 20, subEpochs : int = 10):    
-    model = OBU(8, outputs=2, gpu = gpu, lr = lr, motors = motors, units = units, epochs = subEpochs)
+    model = OBUTesting(8, outputs=2, gpu = gpu, lr = lr, motors = motors, units = units, epochs = subEpochs)
 
     # Load model
     if not os.path.exists(checkpoint_file):

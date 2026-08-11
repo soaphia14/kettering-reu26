@@ -18,7 +18,10 @@ __pycache__/
 /attacks/const/temp
 
 /defenses/fed/data-test
+/defenses/fed/adv-test
 
 _old/
 
 /attacks/defed/data-test/
+
+/test

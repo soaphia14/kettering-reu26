@@ -524,6 +524,13 @@ class OBU():
     
 
 # Creating overall model Class - for testing, outputs some dict metrics
+"""
+Essentially exact copy of OBU class - but .test() returns something different/minor changes
+for testing once the model is trained.
+
+This class was created as to preserve the original OBU class to replicate the exact training for the 
+models. This class is only used for testing purposes after the model is trained.
+"""
 class OBUTesting():
     def __init__(self, inputSize, units = 20, motors = 8, outputs = 20, epochs = 10, lr = 0.01, randInt = 0, gpu = False, dataset = None, evil = False):
         if isinstance(inputSize, OBU):
